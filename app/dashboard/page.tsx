@@ -1269,12 +1269,18 @@ export default function DashboardPage() {
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <Tabs defaultValue="collection" className="w-full">
           <TabsList className="grid w-full max-w-xs grid-cols-2 mb-4 sm:mb-8">
-            <TabsTrigger value="overview" className="gap-1 sm:gap-2 text-sm sm:text-base h-10 sm:h-auto">
+            <TabsTrigger
+              value="overview"
+              className="gap-1 sm:gap-2 text-sm sm:text-base h-10 sm:h-auto"
+            >
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Overview</span>
               <span className="inline sm:hidden">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="collection" className="gap-1 sm:gap-2 text-sm sm:text-base h-10 sm:h-auto">
+            <TabsTrigger
+              value="collection"
+              className="gap-1 sm:gap-2 text-sm sm:text-base h-10 sm:h-auto"
+            >
               <Crown className="w-4 h-4" />
               Collection
             </TabsTrigger>
@@ -1384,7 +1390,9 @@ export default function DashboardPage() {
                     className="border-amber-300 hover:bg-amber-50 dark:border-amber-700 dark:hover:bg-amber-950/50 w-full sm:w-auto h-10 sm:h-9"
                   >
                     <RefreshCw
-                      className={`w-4 h-4 ${isRefreshingPrices ? "animate-spin" : ""} sm:mr-2`}
+                      className={`w-4 h-4 ${
+                        isRefreshingPrices ? "animate-spin" : ""
+                      } sm:mr-2`}
                     />
                     <span className="ml-2 sm:ml-0">Refresh Prices</span>
                   </Button>
@@ -2165,14 +2173,14 @@ export default function DashboardPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="24K">24K Gold</SelectItem>
-                      <SelectItem value="22K">22K Gold</SelectItem>
-                      <SelectItem value="21K">21K Gold</SelectItem>
-                      <SelectItem value="20K">20K Gold</SelectItem>
-                      <SelectItem value="18K">18K Gold</SelectItem>
-                      <SelectItem value="16K">16K Gold</SelectItem>
-                      <SelectItem value="14K">14K Gold</SelectItem>
-                      <SelectItem value="10K">10K Gold</SelectItem>
+                      <SelectItem value="24k">24K Gold</SelectItem>
+                      <SelectItem value="22k">22K Gold</SelectItem>
+                      <SelectItem value="21k">21K Gold</SelectItem>
+                      <SelectItem value="20k">20K Gold</SelectItem>
+                      <SelectItem value="18k">18K Gold</SelectItem>
+                      <SelectItem value="16k">16K Gold</SelectItem>
+                      <SelectItem value="14k">14K Gold</SelectItem>
+                      <SelectItem value="10k">10K Gold</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -2183,9 +2191,9 @@ export default function DashboardPage() {
                   <Input
                     id="edit-weight"
                     type="number"
-                    value={editFormData.weight}
+                    value={editFormData.weight || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleEditFormChange("weight", parseFloat(e.target.value))
+                      handleEditFormChange("weight", parseFloat(e.target.value) || 0)
                     }
                     placeholder="0.00"
                     step="0.01"
@@ -2201,11 +2209,11 @@ export default function DashboardPage() {
                   <Input
                     id="edit-buyPrice"
                     type="number"
-                    value={editFormData.buyPrice}
+                    value={editFormData.buyPrice || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleEditFormChange(
                         "buyPrice",
-                        parseFloat(e.target.value)
+                        parseFloat(e.target.value) || 0
                       )
                     }
                     placeholder="0.00"
@@ -2917,7 +2925,10 @@ export default function DashboardPage() {
               >
                 Cancel
               </Button>
-              <Button className="flex-1 sm:flex-none h-12 sm:h-10 text-base sm:text-sm" onClick={handleAddJewelry}>
+              <Button
+                className="flex-1 sm:flex-none h-12 sm:h-10 text-base sm:text-sm"
+                onClick={handleAddJewelry}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Jewelry
               </Button>
