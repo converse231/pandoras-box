@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   Sparkles,
   TrendingUp,
   Globe2,
@@ -17,22 +26,30 @@ import {
   Crown,
   ArrowRight,
   Check,
+  Menu,
+  X,
 } from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-linear-to-b from-background via-background to-amber-50/20 dark:to-amber-950/10">
       {/* Navigation */}
       <nav className="border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Crown className="w-8 h-8 text-amber-600" />
-              <span className="text-2xl font-bold bg-linear-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2">
+              <Crown className="w-6 h-6 md:w-8 md:h-8 text-amber-600" />
+              <span className="text-lg md:text-2xl font-bold bg-linear-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
                 Pandora&apos;s Box
               </span>
-            </div>
-            <div className="flex items-center gap-4">
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-4">
               <Link href="#features">
                 <Button variant="ghost" size="sm">
                   Features
@@ -54,6 +71,49 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
+
+            {/* Mobile Menu Button */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <Crown className="w-6 h-6 text-amber-600" />
+                    <span className="bg-linear-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
+                      Pandora&apos;s Box
+                    </span>
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-8">
+                  <Link href="#features" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start text-lg h-12">
+                      Features
+                    </Button>
+                  </Link>
+                  <Link href="#benefits" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start text-lg h-12">
+                      Benefits
+                    </Button>
+                  </Link>
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start text-lg h-12">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full bg-linear-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-lg h-12 mt-4">
+                      Get Started
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </nav>
