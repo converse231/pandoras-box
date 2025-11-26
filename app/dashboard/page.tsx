@@ -1266,14 +1266,15 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <Tabs defaultValue="collection" className="w-full">
-          <TabsList className="grid w-full max-w-xs grid-cols-2 mb-8">
-            <TabsTrigger value="overview" className="gap-2">
+          <TabsList className="grid w-full max-w-xs grid-cols-2 mb-4 sm:mb-8">
+            <TabsTrigger value="overview" className="gap-1 sm:gap-2 text-sm sm:text-base h-10 sm:h-auto">
               <BarChart3 className="w-4 h-4" />
-              Overview
+              <span className="hidden sm:inline">Overview</span>
+              <span className="inline sm:hidden">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="collection" className="gap-2">
+            <TabsTrigger value="collection" className="gap-1 sm:gap-2 text-sm sm:text-base h-10 sm:h-auto">
               <Crown className="w-4 h-4" />
               Collection
             </TabsTrigger>
@@ -1282,7 +1283,7 @@ export default function DashboardPage() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">
             {/* Statistics Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <Card className="border-amber-200 dark:border-amber-800/50 bg-linear-to-br from-amber-50/50 to-yellow-50/50 dark:from-amber-950/20 dark:to-yellow-950/20">
                 <CardHeader className="pb-2">
                   <CardDescription className="text-xs">
@@ -1363,15 +1364,15 @@ export default function DashboardPage() {
             </div>
 
             {/* Live Gold Prices Section */}
-            <Card className="mb-8 border-amber-200 dark:border-amber-800/50 bg-linear-to-br from-amber-50/30 to-yellow-50/30 dark:from-amber-950/10 dark:to-yellow-950/10">
-              <CardHeader>
-                <div className="flex items-center justify-between">
+            <Card className="mb-4 sm:mb-8 border-amber-200 dark:border-amber-800/50 bg-linear-to-br from-amber-50/30 to-yellow-50/30 dark:from-amber-950/10 dark:to-yellow-950/10">
+              <CardHeader className="pb-3 sm:pb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
                   <div>
-                    <CardTitle className="text-xl font-bold flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-600" />
-                      Live Gold Prices per Gram
+                    <CardTitle className="text-base sm:text-xl font-bold flex items-center gap-2">
+                      <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600" />
+                      <span>Live Gold Prices per Gram</span>
                     </CardTitle>
-                    <CardDescription className="text-sm mt-1">
+                    <CardDescription className="text-xs sm:text-sm mt-1">
                       Real-time market prices • Cached for 24 hours
                     </CardDescription>
                   </div>
@@ -1380,14 +1381,12 @@ export default function DashboardPage() {
                     size="sm"
                     onClick={handleRefreshPrices}
                     disabled={isRefreshingPrices}
-                    className="border-amber-300 hover:bg-amber-50 dark:border-amber-700 dark:hover:bg-amber-950/50"
+                    className="border-amber-300 hover:bg-amber-50 dark:border-amber-700 dark:hover:bg-amber-950/50 w-full sm:w-auto h-10 sm:h-9"
                   >
                     <RefreshCw
-                      className={`w-4 h-4 mr-2 ${
-                        isRefreshingPrices ? "animate-spin" : ""
-                      }`}
+                      className={`w-4 h-4 ${isRefreshingPrices ? "animate-spin" : ""} sm:mr-2`}
                     />
-                    Refresh Prices
+                    <span className="ml-2 sm:ml-0">Refresh Prices</span>
                   </Button>
                 </div>
                 {priceLastUpdated && (
@@ -1738,8 +1737,8 @@ export default function DashboardPage() {
           {/* Collection Tab - Just the feed */}
           <TabsContent value="collection">
             {/* Filters and Search */}
-            <Card className="mb-6 border-border bg-card">
-              <CardContent className="pt-6">
+            <Card className="mb-4 sm:mb-6 border-border bg-card">
+              <CardContent className="pt-4 sm:pt-6">
                 <div className="flex flex-col md:flex-row gap-4">
                   {/* Search */}
                   <div className="flex-1">
@@ -2101,14 +2100,14 @@ export default function DashboardPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-[90vw] md:max-w-2xl max-h-[90vh] overflow-y-auto px-4 sm:px-6">
+        <DialogContent className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
           {editingItem && (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-3 sm:space-y-4">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold">
+                <DialogTitle className="text-lg sm:text-2xl font-bold">
                   Edit Jewelry Details
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-xs sm:text-sm">
                   Update the information for {editingItem.name}
                 </DialogDescription>
               </DialogHeader>
@@ -2378,17 +2377,17 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-4 sticky bottom-0 sm:static bg-background sm:bg-transparent pb-2 sm:pb-0 -mx-3 sm:mx-0 px-3 sm:px-0 border-t sm:border-t-0">
                   <Button
                     variant="outline"
                     onClick={handleCancelEdit}
-                    className="border-border"
+                    className="border-border w-full sm:w-auto h-12 sm:h-10 text-base sm:text-sm"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleSaveEdit}
-                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                    className="bg-amber-600 hover:bg-amber-700 text-white flex-1 sm:flex-none h-12 sm:h-10 text-base sm:text-sm"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Save Changes
@@ -2402,10 +2401,10 @@ export default function DashboardPage() {
 
       {/* Jewelry Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-[90vw] md:max-w-3xl max-h-[90vh] overflow-y-auto pt-4 px-4 sm:px-6">
+        <DialogContent className="max-w-[100vw] sm:max-w-[95vw] md:max-w-3xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto pt-3 sm:pt-4 px-3 sm:px-6 pb-4 sm:pb-6">
           {selectedItem && (
-            <div className="space-y-2.5">
-              <DialogHeader className="pb-1.5 pt-0">
+            <div className="space-y-2 sm:space-y-2.5">
+              <DialogHeader className="pb-1 sm:pb-1.5 pt-0">
                 <div className="flex items-start justify-between">
                   <div>
                     <DialogTitle className="text-xl font-bold">
@@ -2632,18 +2631,18 @@ export default function DashboardPage() {
 
       {/* Add Jewelry Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-[90vw] md:max-w-2xl max-h-[90vh] overflow-y-auto px-4 sm:px-6">
-          <div className="space-y-4 sm:space-y-6">
+        <DialogContent className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
+          <div className="space-y-3 sm:space-y-4">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">
+              <DialogTitle className="text-lg sm:text-2xl font-bold">
                 Add New Jewelry
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-xs sm:text-sm">
                 Add a new jewelry item to your collection
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="add-name">Name *</Label>
@@ -2910,17 +2909,17 @@ export default function DashboardPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-2">
-              <Button className="flex-1" onClick={handleAddJewelry}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Jewelry
-              </Button>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4 sm:pt-4 sticky bottom-0 sm:static bg-background sm:bg-transparent pb-2 sm:pb-0 -mx-3 sm:mx-0 px-3 sm:px-0 border-t sm:border-t-0">
               <Button
                 variant="outline"
-                className="border-border"
+                className="border-border w-full sm:w-auto h-12 sm:h-10 text-base sm:text-sm"
                 onClick={handleCancelAdd}
               >
                 Cancel
+              </Button>
+              <Button className="flex-1 sm:flex-none h-12 sm:h-10 text-base sm:text-sm" onClick={handleAddJewelry}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Jewelry
               </Button>
             </div>
           </div>
@@ -2959,10 +2958,10 @@ export default function DashboardPage() {
         open={isCameraOpen}
         onOpenChange={(open) => !open && closeCamera()}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto p-3 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Take Photo</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">Take Photo</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
               Position your jewelry and click capture to take a photo
             </DialogDescription>
           </DialogHeader>
