@@ -2108,9 +2108,18 @@ export default function DashboardPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
+        <DialogContent
+          className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6"
+          onInteractOutside={(e) => {
+            if (isCameraOpen) e.preventDefault();
+          }}
+        >
           {editingItem && (
-            <div className="space-y-3 sm:space-y-4">
+            <div
+              className={`space-y-3 sm:space-y-4 ${
+                isCameraOpen ? "pointer-events-none" : ""
+              }`}
+            >
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-2xl font-bold">
                   Edit Jewelry Details
@@ -2412,9 +2421,18 @@ export default function DashboardPage() {
 
       {/* Jewelry Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-[100vw] sm:max-w-[95vw] md:max-w-3xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto pt-3 sm:pt-4 px-3 sm:px-6 pb-4 sm:pb-6">
+        <DialogContent
+          className="max-w-[100vw] sm:max-w-[95vw] md:max-w-3xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto pt-3 sm:pt-4 px-3 sm:px-6 pb-4 sm:pb-6"
+          onInteractOutside={(e) => {
+            if (isCameraOpen) e.preventDefault();
+          }}
+        >
           {selectedItem && (
-            <div className="space-y-2 sm:space-y-2.5">
+            <div
+              className={`space-y-2 sm:space-y-2.5 ${
+                isCameraOpen ? "pointer-events-none" : ""
+              }`}
+            >
               <DialogHeader className="pb-1 sm:pb-1.5 pt-0">
                 <div className="flex items-start justify-between">
                   <div>
@@ -2642,8 +2660,17 @@ export default function DashboardPage() {
 
       {/* Add Jewelry Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6">
-          <div className="space-y-3 sm:space-y-4">
+        <DialogContent
+          className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6"
+          onInteractOutside={(e) => {
+            if (isCameraOpen) e.preventDefault();
+          }}
+        >
+          <div
+            className={`space-y-3 sm:space-y-4 ${
+              isCameraOpen ? "pointer-events-none" : ""
+            }`}
+          >
             <DialogHeader>
               <DialogTitle className="text-lg sm:text-2xl font-bold">
                 Add New Jewelry
@@ -2969,7 +2996,7 @@ export default function DashboardPage() {
 
       {/* Custom Full-Screen Camera Overlay */}
       {isCameraOpen && (
-        <div className="fixed inset-0 z-100 bg-black">
+        <div className="fixed inset-0 z-100 bg-black pointer-events-auto">
           {/* Camera Preview - Full Screen */}
           <video
             ref={videoRef}
