@@ -2325,7 +2325,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {editFormData.images.length > 0 && (
+                  {(editFormData.images.length > 0 ||
+                    editPendingImages.length > 0) && (
                     <div className="grid grid-cols-4 gap-2 mt-2">
                       {/* Show already uploaded images */}
                       {editFormData.images.map((img, idx) => (
@@ -2773,16 +2774,21 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Image Count */}
-                  {addFormData.images.length > 0 && (
+                  {(addFormData.images.length > 0 ||
+                    addPendingImages.length > 0) && (
                     <div className="text-center">
                       <div className="inline-block px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium">
-                        {addFormData.images.length} image(s) uploaded
+                        {addFormData.images.length + addPendingImages.length}{" "}
+                        image(s) selected
+                        {addPendingImages.length > 0 &&
+                          ` (${addPendingImages.length} pending upload)`}
                       </div>
                     </div>
                   )}
 
                   {/* Image Previews */}
-                  {addFormData.images.length > 0 && (
+                  {(addFormData.images.length > 0 ||
+                    addPendingImages.length > 0) && (
                     <div className="grid grid-cols-3 gap-2">
                       {/* Show already uploaded images */}
                       {addFormData.images.map((image, index) => (
