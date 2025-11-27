@@ -2969,7 +2969,7 @@ export default function DashboardPage() {
 
       {/* Custom Full-Screen Camera Overlay */}
       {isCameraOpen && (
-        <div className="fixed inset-0 z-50 bg-black">
+        <div className="fixed inset-0 z-100 bg-black">
           {/* Camera Preview - Full Screen */}
           <video
             ref={videoRef}
