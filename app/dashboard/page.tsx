@@ -37,6 +37,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -2059,36 +2066,37 @@ export default function DashboardPage() {
         </Tabs>
       </main>
 
-      {/* Edit Dialog */}
-      <Dialog
+      {/* Edit Sheet */}
+      <Sheet
         open={isEditDialogOpen}
         onOpenChange={(open) => {
           if (!open) handleCancelEdit();
           else setIsEditDialogOpen(true);
         }}
       >
-        <DialogContent
-          className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6"
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-2xl overflow-y-auto p-0"
           onInteractOutside={(e) => {
             if (isCameraOpen) e.preventDefault();
           }}
         >
           {editingItem && (
             <div
-              className={`space-y-3 sm:space-y-4 ${
+              className={`${
                 isCameraOpen ? "pointer-events-none" : ""
               }`}
             >
-              <DialogHeader>
-                <DialogTitle className="text-lg sm:text-2xl font-bold">
+              <SheetHeader>
+                <SheetTitle className="text-xl font-bold">
                   Edit Jewelry Details
-                </DialogTitle>
-                <DialogDescription className="text-xs sm:text-sm">
+                </SheetTitle>
+                <SheetDescription className="text-sm">
                   Update the information for {editingItem.name}
-                </DialogDescription>
-              </DialogHeader>
+                </SheetDescription>
+              </SheetHeader>
 
-              <div className="space-y-4">
+              <div className="space-y-4 px-4 pb-4">
                 {/* Name */}
                 <div className="space-y-2">
                   <Label htmlFor="edit-name">Name</Label>
@@ -2385,7 +2393,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-4 sticky bottom-0 sm:static bg-background sm:bg-transparent pb-2 sm:pb-0 -mx-3 sm:mx-0 px-3 sm:px-0 border-t sm:border-t-0">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t mt-4 px-4">
                   <Button
                     variant="outline"
                     onClick={handleCancelEdit}
@@ -2414,8 +2422,8 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Jewelry Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -2656,35 +2664,36 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Jewelry Dialog */}
-      <Dialog
+      {/* Add Jewelry Sheet */}
+      <Sheet
         open={isAddDialogOpen}
         onOpenChange={(open) => {
           if (!open) handleCancelAdd();
           else setIsAddDialogOpen(true);
         }}
       >
-        <DialogContent
-          className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6"
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-2xl overflow-y-auto p-0"
           onInteractOutside={(e) => {
             if (isCameraOpen) e.preventDefault();
           }}
         >
           <div
-            className={`space-y-3 sm:space-y-4 ${
+            className={`${
               isCameraOpen ? "pointer-events-none" : ""
             }`}
           >
-            <DialogHeader>
-              <DialogTitle className="text-lg sm:text-2xl font-bold">
+            <SheetHeader>
+              <SheetTitle className="text-xl font-bold">
                 Add New Jewelry
-              </DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm">
+              </SheetTitle>
+              <SheetDescription className="text-sm">
                 Add a new jewelry item to your collection
-              </DialogDescription>
-            </DialogHeader>
+              </SheetDescription>
+            </SheetHeader>
 
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4 px-4 pb-4">
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="add-name">Name *</Label>
@@ -2989,7 +2998,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4 sm:pt-4 sticky bottom-0 sm:static bg-background sm:bg-transparent pb-2 sm:pb-0 -mx-3 sm:mx-0 px-3 sm:px-0 border-t sm:border-t-0">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4 border-t mt-4 px-4">
               <Button
                 variant="outline"
                 className="border-border w-full sm:w-auto h-12 sm:h-10 text-base sm:text-sm"
@@ -3016,8 +3025,8 @@ export default function DashboardPage() {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog
