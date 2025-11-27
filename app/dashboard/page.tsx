@@ -2193,7 +2193,10 @@ export default function DashboardPage() {
                     type="number"
                     value={editFormData.weight || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleEditFormChange("weight", parseFloat(e.target.value) || 0)
+                      handleEditFormChange(
+                        "weight",
+                        parseFloat(e.target.value) || 0
+                      )
                     }
                     placeholder="0.00"
                     step="0.01"

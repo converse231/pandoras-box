@@ -16,3 +16,4 @@ USING ( bucket_id = 'jewelry-images' );
 
 -- That's it! Your images will now be accessible via public URLs
 
+
