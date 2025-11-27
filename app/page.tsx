@@ -80,7 +80,10 @@ export default function Home() {
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <SheetContent
+                side="right"
+                className="w-[300px] sm:w-[400px] px-3"
+              >
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
                     <Crown className="w-6 h-6 text-amber-600" />
@@ -90,22 +93,43 @@ export default function Home() {
                   </SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col gap-4 mt-8">
-                  <Link href="#features" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start text-lg h-12">
+                  <Link
+                    href="#features"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-lg h-12"
+                    >
                       Features
                     </Button>
                   </Link>
-                  <Link href="#benefits" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start text-lg h-12">
+                  <Link
+                    href="#benefits"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-lg h-12"
+                    >
                       Benefits
                     </Button>
                   </Link>
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start text-lg h-12">
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-lg h-12"
+                    >
                       Sign In
                     </Button>
                   </Link>
-                  <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link
+                    href="/signup"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
                     <Button className="w-full bg-linear-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-lg h-12 mt-4">
                       Get Started
                       <ArrowRight className="ml-2 w-5 h-5" />
