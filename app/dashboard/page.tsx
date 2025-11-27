@@ -2990,6 +2990,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 bg-linear-to-b from-black/60 to-transparent z-10">
             <div className="flex items-center justify-between">
               <Button
+                type="button"
                 variant="ghost"
                 size="icon"
                 onClick={closeCamera}
@@ -3009,6 +3010,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center gap-8">
               {/* Cancel Button */}
               <Button
+                type="button"
                 variant="ghost"
                 onClick={closeCamera}
                 className="text-white hover:bg-white/20 text-base font-medium px-6"
@@ -3018,6 +3020,7 @@ export default function DashboardPage() {
 
               {/* Capture Button - Large Circle */}
               <button
+                type="button"
                 onClick={capturePhoto}
                 className="relative w-20 h-20 rounded-full border-4 border-white bg-transparent hover:bg-white/10 transition-all active:scale-95"
               >
