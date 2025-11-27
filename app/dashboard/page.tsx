@@ -1267,11 +1267,11 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <Tabs defaultValue="collection" className="w-full">
-          <TabsList className="grid w-full max-w-xs grid-cols-2 mb-4 sm:mb-8">
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full max-w-xs grid-cols-2 mb-4 sm:mb-8 h-auto p-1">
             <TabsTrigger
               value="overview"
-              className="gap-1 sm:gap-2 text-sm sm:text-base h-10 sm:h-auto"
+              className="gap-1 sm:gap-2 text-sm sm:text-base py-2"
             >
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Overview</span>
@@ -1279,7 +1279,7 @@ export default function DashboardPage() {
             </TabsTrigger>
             <TabsTrigger
               value="collection"
-              className="gap-1 sm:gap-2 text-sm sm:text-base h-10 sm:h-auto"
+              className="gap-1 sm:gap-2 text-sm sm:text-base py-2"
             >
               <Crown className="w-4 h-4" />
               Collection
