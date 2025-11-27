@@ -2967,78 +2967,72 @@ export default function DashboardPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Camera Dialog */}
-      <Dialog
-        open={isCameraOpen}
-        onOpenChange={(open) => !open && closeCamera()}
-      >
-        <DialogContent className="max-w-full w-full h-full sm:max-w-full sm:h-full p-0 gap-0 border-0 bg-black [&>button]:hidden">
-          {/* Full Screen Camera View */}
-          <div className="relative w-full h-full bg-black">
-            {/* Camera Preview - Full Screen */}
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
+      {/* Custom Full-Screen Camera Overlay */}
+      {isCameraOpen && (
+        <div className="fixed inset-0 z-50 bg-black">
+          {/* Camera Preview - Full Screen */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
 
-            {/* Viewfinder Grid Overlay */}
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute inset-8 sm:inset-12 border-2 border-white/30 rounded-lg">
-                <div className="absolute top-1/2 left-0 right-0 h-px bg-white/20" />
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20" />
-              </div>
+          {/* Viewfinder Grid Overlay */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-8 sm:inset-12 border-2 border-white/30 rounded-lg">
+              <div className="absolute top-1/2 left-0 right-0 h-px bg-white/20" />
+              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20" />
             </div>
-
-            {/* Top Bar - Close Button */}
-            <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 bg-linear-to-b from-black/60 to-transparent">
-              <div className="flex items-center justify-between">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={closeCamera}
-                  className="text-white hover:bg-white/20 h-10 w-10 rounded-full"
-                >
-                  <X className="w-6 h-6" />
-                </Button>
-                <p className="text-white text-sm font-medium">
-                  Position your jewelry
-                </p>
-                <div className="w-10" /> {/* Spacer for centering */}
-              </div>
-            </div>
-
-            {/* Bottom Controls - Camera Button */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 bg-linear-to-t from-black/80 via-black/40 to-transparent">
-              <div className="flex items-center justify-center gap-8">
-                {/* Cancel Button */}
-                <Button
-                  variant="ghost"
-                  onClick={closeCamera}
-                  className="text-white hover:bg-white/20 text-base font-medium px-6"
-                >
-                  Cancel
-                </Button>
-
-                {/* Capture Button - Large Circle */}
-                <button
-                  onClick={capturePhoto}
-                  className="relative w-20 h-20 rounded-full border-4 border-white bg-transparent hover:bg-white/10 transition-all active:scale-95"
-                >
-                  <div className="absolute inset-2 rounded-full bg-white" />
-                </button>
-
-                {/* Empty spacer for symmetry */}
-                <div className="w-24" />
-              </div>
-            </div>
-
-            {/* Hidden Canvas for Capture */}
-            <canvas ref={canvasRef} className="hidden" />
           </div>
-        </DialogContent>
-      </Dialog>
+
+          {/* Top Bar - Close Button */}
+          <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 bg-linear-to-b from-black/60 to-transparent z-10">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeCamera}
+                className="text-white hover:bg-white/20 h-10 w-10 rounded-full"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+              <p className="text-white text-sm font-medium">
+                Position your jewelry
+              </p>
+              <div className="w-10" /> {/* Spacer for centering */}
+            </div>
+          </div>
+
+          {/* Bottom Controls - Camera Button */}
+          <div className="absolute bottom-0 left-0 right-0 pb-8 pt-6 sm:pb-12 sm:pt-8 bg-linear-to-t from-black/80 via-black/40 to-transparent z-10">
+            <div className="flex items-center justify-center gap-8">
+              {/* Cancel Button */}
+              <Button
+                variant="ghost"
+                onClick={closeCamera}
+                className="text-white hover:bg-white/20 text-base font-medium px-6"
+              >
+                Cancel
+              </Button>
+
+              {/* Capture Button - Large Circle */}
+              <button
+                onClick={capturePhoto}
+                className="relative w-20 h-20 rounded-full border-4 border-white bg-transparent hover:bg-white/10 transition-all active:scale-95"
+              >
+                <div className="absolute inset-2 rounded-full bg-white" />
+              </button>
+
+              {/* Empty spacer for symmetry */}
+              <div className="w-24" />
+            </div>
+          </div>
+
+          {/* Hidden Canvas for Capture */}
+          <canvas ref={canvasRef} className="hidden" />
+        </div>
+      )}
     </div>
   );
 }
