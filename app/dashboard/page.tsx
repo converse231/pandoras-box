@@ -397,6 +397,26 @@ export default function DashboardPage() {
       }
     });
 
+  // Calculate statistics for filtered items (used in Collection tab)
+  const filteredTotalValue = filteredItems.reduce(
+    (sum, item) => sum + item.currentValue,
+    0
+  );
+  const filteredTotalInvested = filteredItems.reduce(
+    (sum, item) => sum + item.buyPrice,
+    0
+  );
+  const filteredTotalProfit = filteredTotalValue - filteredTotalInvested;
+  const filteredProfitPercentage =
+    filteredTotalInvested > 0
+      ? ((filteredTotalProfit / filteredTotalInvested) * 100).toFixed(1)
+      : "0.0";
+  const filteredTotalWeight = filteredItems.reduce(
+    (sum, item) => sum + item.weight,
+    0
+  );
+  const filteredTotalItems = filteredItems.length;
+
   const convertCurrency = (amount: number) => {
     const rate = exchangeRates[selectedCurrency];
     return amount * rate;
@@ -2176,6 +2196,86 @@ export default function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Filtered Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 sm:mb-6">
+              {/* Filtered Total Value */}
+              <Card className="border-amber-200 dark:border-amber-800/50 bg-linear-to-br from-amber-50/50 to-yellow-50/50 dark:from-amber-950/20 dark:to-yellow-950/20">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">
+                    Total Value
+                  </CardDescription>
+                  <CardTitle className="text-2xl font-bold bg-linear-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
+                    {formatCurrency(filteredTotalValue)}
+                  </CardTitle>
+                  <div className="flex items-center gap-1 text-xs">
+                    {filteredTotalProfit >= 0 ? (
+                      <TrendingUp className="w-3 h-3 text-emerald-500" />
+                    ) : (
+                      <TrendingDown className="w-3 h-3 text-red-500" />
+                    )}
+                    <span
+                      className={
+                        filteredTotalProfit >= 0
+                          ? "text-emerald-500"
+                          : "text-red-500"
+                      }
+                    >
+                      {filteredProfitPercentage}% (
+                      {formatCurrency(filteredTotalProfit)})
+                    </span>
+                  </div>
+                </CardHeader>
+              </Card>
+
+              {/* Filtered Total Weight */}
+              <Card className="border-border bg-card">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs flex items-center gap-1">
+                    <Weight className="w-3 h-3" />
+                    Total Weight
+                  </CardDescription>
+                  <CardTitle className="text-2xl font-bold">
+                    {filteredTotalWeight.toFixed(2)}g
+                  </CardTitle>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <span>Across {filteredTotalItems} items</span>
+                  </div>
+                </CardHeader>
+              </Card>
+
+              {/* Filtered Total Invested */}
+              <Card className="border-border bg-card">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs flex items-center gap-1">
+                    <Coins className="w-3 h-3" />
+                    Total Invested
+                  </CardDescription>
+                  <CardTitle className="text-2xl font-bold">
+                    {formatCurrency(filteredTotalInvested)}
+                  </CardTitle>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <span>Initial investment</span>
+                  </div>
+                </CardHeader>
+              </Card>
+
+              {/* Filtered Collection Size */}
+              <Card className="border-border bg-card">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">
+                    Collection Size
+                  </CardDescription>
+                  <CardTitle className="text-2xl font-bold">
+                    {filteredTotalItems} Items
+                  </CardTitle>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Gem className="w-3 h-3" />
+                    <span>Precious pieces</span>
+                  </div>
+                </CardHeader>
+              </Card>
+            </div>
 
             {/* Jewelry Grid */}
             {isLoadingJewelry ? (
