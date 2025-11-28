@@ -84,6 +84,10 @@ import {
   Sun,
   Loader2,
   Camera,
+  FileDown,
+  FileUp,
+  FileJson,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -205,6 +209,7 @@ export default function DashboardPage() {
   const [cameraMode, setCameraMode] = useState<"add" | "edit">("add");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const importFileInputRef = useRef<HTMLInputElement>(null);
 
   // Gold price state
   const [goldPricesPerGram, setGoldPricesPerGram] = useState({
@@ -1105,6 +1110,211 @@ export default function DashboardPage() {
     setAddTagInput("");
   };
 
+  // Export data to JSON
+  const handleExportJSON = () => {
+    try {
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        totalItems: jewelryItems.length,
+        items: jewelryItems,
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `jewelry-collection-${
+        new Date().toISOString().split("T")[0]
+      }.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("Data exported successfully!", {
+        description: `Exported ${jewelryItems.length} items to JSON`,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export data");
+    }
+  };
+
+  // Export data to CSV
+  const handleExportCSV = () => {
+    try {
+      // Define CSV headers
+      const headers = [
+        "Name",
+        "Category",
+        "Gold Type",
+        "Weight (g)",
+        "Buy Price",
+        "Date Bought",
+        "Description",
+        "Tags",
+        "Images Count",
+      ];
+
+      // Convert jewelry data to CSV rows
+      const rows = jewelryItems.map((item: (typeof mockJewelryData)[0]) => [
+        `"${item.name.replace(/"/g, '""')}"`,
+        item.category,
+        item.goldType,
+        item.weight,
+        item.buyPrice,
+        item.dateBought,
+        `"${(item.description || "").replace(/"/g, '""')}"`,
+        `"${(item.tags || []).join(", ")}"`,
+        item.images?.length || 0,
+      ]);
+
+      // Combine headers and rows
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row: (string | number)[]) => row.join(",")),
+      ].join("\n");
+
+      // Create and download file
+      const dataBlob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `jewelry-collection-${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("Data exported successfully!", {
+        description: `Exported ${jewelryItems.length} items to CSV`,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export data");
+    }
+  };
+
+  // Import data from JSON
+  const handleImportJSON = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Get current user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        toast.error("Authentication error", {
+          description: "Please log in again",
+        });
+        return;
+      }
+
+      const text = await file.text();
+      const importData = JSON.parse(text);
+
+      // Validate the import data structure
+      if (!importData.items || !Array.isArray(importData.items)) {
+        toast.error("Invalid file format", {
+          description: "The file does not contain valid jewelry data",
+        });
+        return;
+      }
+
+      // Import each item
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const item of importData.items) {
+        try {
+          const { error: insertError } = await supabase
+            .from("jewelry_items")
+            .insert({
+              user_id: user.id,
+              name: item.name,
+              category: item.category,
+              gold_type: item.goldType,
+              weight: item.weight,
+              buy_price: item.buyPrice,
+              date_bought: item.dateBought,
+              description: item.description || "",
+              images: item.images || [],
+              tags: item.tags || [],
+            });
+
+          if (insertError) {
+            console.error("Insert error:", insertError);
+            errorCount++;
+          } else {
+            successCount++;
+          }
+        } catch (error) {
+          console.error("Item import error:", error);
+          errorCount++;
+        }
+      }
+
+      // Refresh the jewelry data by reloading from database
+      if (successCount > 0) {
+        const { data: items, error: itemsError } = await supabase
+          .from("jewelry_items")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("date_bought", { ascending: false });
+
+        if (!itemsError && items) {
+          // Transform database data to match component format
+          const transformedItems = items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            images: item.images || [],
+            category: item.category,
+            goldType: item.gold_type,
+            weight: parseFloat(item.weight),
+            buyPrice: parseFloat(item.buy_price),
+            currentValue: parseFloat(item.current_value),
+            dateBought: item.date_bought,
+            description: item.description || "",
+            tags: item.tags || [],
+          }));
+
+          setJewelryItems(transformedItems);
+        }
+
+        toast.success("Import completed!", {
+          description: `Successfully imported ${successCount} items${
+            errorCount > 0 ? `, ${errorCount} failed` : ""
+          }`,
+        });
+      } else {
+        toast.error("Import failed", {
+          description: "No items were imported",
+        });
+      }
+    } catch (error) {
+      console.error("Import error:", error);
+      toast.error("Failed to import data", {
+        description: "Please check the file format and try again",
+      });
+    }
+
+    // Reset the file input
+    if (importFileInputRef.current) {
+      importFileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -1213,6 +1423,47 @@ export default function DashboardPage() {
                 <Plus className="w-3.5 h-3.5 md:w-4 md:h-4 md:mr-2" />
                 <span className="hidden sm:inline">Add Jewelry</span>
               </Button>
+
+              {/* Export/Import Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 md:h-9 md:w-9"
+                  >
+                    <FileDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Data Management</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleExportJSON}>
+                    <FileJson className="w-4 h-4 mr-2" />
+                    Export to JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportCSV}>
+                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    Export to CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => importFileInputRef.current?.click()}
+                  >
+                    <FileUp className="w-4 h-4 mr-2" />
+                    Import from JSON
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Hidden file input for import */}
+              <input
+                ref={importFileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImportJSON}
+                className="hidden"
+              />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
