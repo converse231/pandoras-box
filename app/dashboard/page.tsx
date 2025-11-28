@@ -2687,6 +2687,8 @@ export default function DashboardPage() {
       <Sheet
         open={isEditDialogOpen}
         onOpenChange={(open) => {
+          // Prevent closing if camera or crop dialog is open
+          if (isCameraOpen || isCropDialogOpen) return;
           if (!open) handleCancelEdit();
           else setIsEditDialogOpen(true);
         }}
@@ -2695,11 +2697,15 @@ export default function DashboardPage() {
           side="right"
           className="w-full sm:max-w-2xl overflow-y-auto p-0"
           onInteractOutside={(e) => {
-            if (isCameraOpen) e.preventDefault();
+            if (isCameraOpen || isCropDialogOpen) e.preventDefault();
           }}
         >
           {editingItem && (
-            <div className={`${isCameraOpen ? "pointer-events-none" : ""}`}>
+            <div
+              className={`${
+                isCameraOpen || isCropDialogOpen ? "pointer-events-none" : ""
+              }`}
+            >
               <SheetHeader className="px-6 pt-6">
                 <SheetTitle className="text-xl font-bold">
                   Edit Jewelry Details
@@ -3396,6 +3402,8 @@ export default function DashboardPage() {
       <Sheet
         open={isAddDialogOpen}
         onOpenChange={(open) => {
+          // Prevent closing if camera or crop dialog is open
+          if (isCameraOpen || isCropDialogOpen) return;
           if (!open) handleCancelAdd();
           else setIsAddDialogOpen(true);
         }}
@@ -3404,10 +3412,14 @@ export default function DashboardPage() {
           side="right"
           className="w-full sm:max-w-2xl overflow-y-auto p-0"
           onInteractOutside={(e) => {
-            if (isCameraOpen) e.preventDefault();
+            if (isCameraOpen || isCropDialogOpen) e.preventDefault();
           }}
         >
-          <div className={`${isCameraOpen ? "pointer-events-none" : ""}`}>
+          <div
+            className={`${
+              isCameraOpen || isCropDialogOpen ? "pointer-events-none" : ""
+            }`}
+          >
             <SheetHeader className="px-6 pt-6">
               <SheetTitle className="text-xl font-bold">
                 Add New Jewelry
