@@ -88,11 +88,17 @@ import {
   FileUp,
   FileJson,
   FileSpreadsheet,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Check,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import Cropper from "react-easy-crop";
+import type { Area } from "react-easy-crop";
 import {
   mockJewelryData,
   exchangeRates,
@@ -210,6 +216,21 @@ export default function DashboardPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const importFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Image cropping state
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [cropMode, setCropMode] = useState<"add" | "edit">("add");
+  const [editingImageIndex, setEditingImageIndex] = useState<number | null>(
+    null
+  );
+  const [editingImageType, setEditingImageType] = useState<
+    "uploaded" | "pending"
+  >("pending");
 
   // Gold price state
   const [goldPricesPerGram, setGoldPricesPerGram] = useState({
@@ -745,14 +766,21 @@ export default function DashboardPage() {
       return;
     }
 
-    // Create Object URLs for instant preview (no upload yet)
-    const newPendingImages = fileArray.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-
-    // Add to pending images state
-    setAddPendingImages((prev) => [...prev, ...newPendingImages]);
+    // If single image, open cropper
+    if (fileArray.length === 1) {
+      const imageUrl = URL.createObjectURL(fileArray[0]);
+      setImageToCrop(imageUrl);
+      setCropMode("add");
+      setIsCropDialogOpen(true);
+    } else {
+      // For multiple images, add directly without cropping
+      const newPendingImages = fileArray.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+      setAddPendingImages((prev) => [...prev, ...newPendingImages]);
+      toast.success(`${fileArray.length} images added`);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -776,6 +804,167 @@ export default function DashboardPage() {
     if (files && files.length > 0) {
       processFiles(files);
     }
+  };
+
+  // Image Cropping Functions
+  const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const image = new window.Image();
+      image.addEventListener("load", () => resolve(image));
+      image.addEventListener("error", (error) => reject(error));
+      image.setAttribute("crossOrigin", "anonymous");
+      image.src = url;
+    });
+
+  const getCroppedImg = async (
+    imageSrc: string,
+    pixelCrop: Area,
+    rotation = 0
+  ): Promise<Blob> => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("Failed to get canvas context");
+    }
+
+    const maxSize = Math.max(image.width, image.height);
+    const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
+
+    canvas.width = safeArea;
+    canvas.height = safeArea;
+
+    ctx.translate(safeArea / 2, safeArea / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-safeArea / 2, -safeArea / 2);
+
+    ctx.drawImage(
+      image,
+      safeArea / 2 - image.width * 0.5,
+      safeArea / 2 - image.height * 0.5
+    );
+
+    const data = ctx.getImageData(0, 0, safeArea, safeArea);
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    ctx.putImageData(
+      data,
+      Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
+      Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
+    );
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("Canvas is empty"));
+            return;
+          }
+          resolve(blob);
+        },
+        "image/jpeg",
+        0.9
+      );
+    });
+  };
+
+  const onCropComplete = useCallback(
+    (croppedArea: Area, croppedAreaPixels: Area) => {
+      setCroppedAreaPixels(croppedAreaPixels);
+    },
+    []
+  );
+
+  const handleCropSave = async () => {
+    if (!imageToCrop || !croppedAreaPixels) return;
+
+    try {
+      const croppedImage = await getCroppedImg(
+        imageToCrop,
+        croppedAreaPixels,
+        rotation
+      );
+
+      // Create Object URL for instant preview (no upload yet)
+      const preview = URL.createObjectURL(croppedImage);
+      const pendingImage = { file: croppedImage, preview };
+
+      // Check if we're replacing an existing image
+      if (editingImageIndex !== null) {
+        // Replace existing image
+        if (cropMode === "add") {
+          if (editingImageType === "pending") {
+            // Revoke old preview URL
+            URL.revokeObjectURL(addPendingImages[editingImageIndex].preview);
+            const newPendingImages = [...addPendingImages];
+            newPendingImages[editingImageIndex] = pendingImage;
+            setAddPendingImages(newPendingImages);
+          }
+        } else {
+          if (editingImageType === "pending") {
+            // Revoke old preview URL
+            URL.revokeObjectURL(editPendingImages[editingImageIndex].preview);
+            const newPendingImages = [...editPendingImages];
+            newPendingImages[editingImageIndex] = pendingImage;
+            setEditPendingImages(newPendingImages);
+          }
+        }
+        toast.success("Image updated successfully!");
+      } else {
+        // Add new image
+        if (cropMode === "add") {
+          setAddPendingImages((prev) => [...prev, pendingImage]);
+        } else {
+          setEditPendingImages((prev) => [...prev, pendingImage]);
+        }
+        toast.success("Image added successfully!");
+      }
+
+      // Clean up and close
+      URL.revokeObjectURL(imageToCrop);
+      setImageToCrop(null);
+      setIsCropDialogOpen(false);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+      setCroppedAreaPixels(null);
+      setEditingImageIndex(null);
+      setEditingImageType("pending");
+    } catch (error) {
+      console.error("Error cropping image:", error);
+      toast.error("Failed to crop image");
+    }
+  };
+
+  const handleCropCancel = () => {
+    if (imageToCrop) {
+      URL.revokeObjectURL(imageToCrop);
+    }
+    setImageToCrop(null);
+    setIsCropDialogOpen(false);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setRotation(0);
+    setCroppedAreaPixels(null);
+    setEditingImageIndex(null);
+    setEditingImageType("pending");
+  };
+
+  // Function to recrop an existing image
+  const handleRecropImage = (
+    imageUrl: string,
+    index: number,
+    type: "uploaded" | "pending",
+    mode: "add" | "edit"
+  ) => {
+    setImageToCrop(imageUrl);
+    setCropMode(mode);
+    setEditingImageIndex(index);
+    setEditingImageType(type);
+    setIsCropDialogOpen(true);
   };
 
   // Camera Functions
@@ -834,18 +1023,12 @@ export default function DashboardPage() {
           return;
         }
 
-        // Create Object URL for instant preview (no upload yet)
-        const preview = URL.createObjectURL(blob);
-        const pendingImage = { file: blob, preview };
+        // Create Object URL for cropping
+        const imageUrl = URL.createObjectURL(blob);
+        setImageToCrop(imageUrl);
+        setCropMode(cameraMode);
+        setIsCropDialogOpen(true);
 
-        // Add to appropriate pending images state
-        if (cameraMode === "add") {
-          setAddPendingImages((prev) => [...prev, pendingImage]);
-        } else {
-          setEditPendingImages((prev) => [...prev, pendingImage]);
-        }
-
-        toast.success("Photo captured successfully!");
         closeCamera();
       },
       "image/jpeg",
@@ -921,14 +1104,21 @@ export default function DashboardPage() {
       return;
     }
 
-    // Create Object URLs for instant preview (no upload yet)
-    const newPendingImages = fileArray.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-
-    // Add to pending images state
-    setEditPendingImages((prev) => [...prev, ...newPendingImages]);
+    // If single image, open cropper
+    if (fileArray.length === 1) {
+      const imageUrl = URL.createObjectURL(fileArray[0]);
+      setImageToCrop(imageUrl);
+      setCropMode("edit");
+      setIsCropDialogOpen(true);
+    } else {
+      // For multiple images, add directly without cropping
+      const newPendingImages = fileArray.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+      setEditPendingImages((prev) => [...prev, ...newPendingImages]);
+      toast.success(`${fileArray.length} images added`);
+    }
   };
 
   const handleEditDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -2879,6 +3069,24 @@ export default function DashboardPage() {
                           <div className="absolute top-1 left-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded">
                             Preview
                           </div>
+                          {/* Edit/Recrop button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRecropImage(
+                                pendingImage.preview,
+                                idx,
+                                "pending",
+                                "edit"
+                              );
+                            }}
+                            className="absolute bottom-1 left-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Edit/Recrop image"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </button>
+                          {/* Delete button */}
                           <button
                             type="button"
                             onClick={(e) => {
@@ -3352,6 +3560,24 @@ export default function DashboardPage() {
                           <div className="absolute top-1 left-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded">
                             Preview
                           </div>
+                          {/* Edit/Recrop button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRecropImage(
+                                pendingImage.preview,
+                                index,
+                                "pending",
+                                "add"
+                              );
+                            }}
+                            className="absolute bottom-1 left-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Edit/Recrop image"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </button>
+                          {/* Delete button */}
                           <button
                             type="button"
                             onClick={(e) => {
@@ -3362,6 +3588,7 @@ export default function DashboardPage() {
                               );
                             }}
                             className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Remove image"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -3656,6 +3883,100 @@ export default function DashboardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Image Crop Dialog */}
+      {isCropDialogOpen && imageToCrop && (
+        <div className="fixed inset-0 z-100 bg-black pointer-events-auto flex flex-col">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between p-4 bg-black/80 z-20">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleCropCancel}
+              className="text-white hover:bg-white/20"
+            >
+              <X className="w-5 h-5 mr-2" />
+              Cancel
+            </Button>
+            <h3 className="text-white font-semibold">
+              {editingImageIndex !== null ? "Edit Image" : "Crop Image"}
+            </h3>
+            <Button
+              type="button"
+              onClick={handleCropSave}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <Check className="w-5 h-5 mr-2" />
+              Done
+            </Button>
+          </div>
+
+          {/* Cropper Area */}
+          <div className="relative flex-1 bg-black">
+            <Cropper
+              image={imageToCrop}
+              crop={crop}
+              zoom={zoom}
+              rotation={rotation}
+              aspect={4 / 3}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onRotationChange={setRotation}
+              onCropComplete={onCropComplete}
+              style={{
+                containerStyle: {
+                  width: "100%",
+                  height: "100%",
+                  backgroundColor: "#000",
+                },
+              }}
+            />
+          </div>
+
+          {/* Bottom Controls */}
+          <div className="bg-black/90 p-4 space-y-4 z-20">
+            {/* Zoom Control */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-white text-sm">
+                <div className="flex items-center gap-2">
+                  <ZoomOut className="w-4 h-4" />
+                  <span>Zoom</span>
+                </div>
+                <ZoomIn className="w-4 h-4" />
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-600"
+              />
+            </div>
+
+            {/* Rotation Control */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-white text-sm">
+                <div className="flex items-center gap-2">
+                  <RotateCw className="w-4 h-4" />
+                  <span>Rotation</span>
+                </div>
+                <span>{rotation}°</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={360}
+                step={1}
+                value={rotation}
+                onChange={(e) => setRotation(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-600"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Custom Full-Screen Camera Overlay */}
       {isCameraOpen && (
