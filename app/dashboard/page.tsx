@@ -37,13 +37,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -160,19 +153,8 @@ export default function DashboardPage() {
     description: "",
     images: [] as string[],
   });
-  // Pending images that haven't been uploaded yet (for add form)
-  const [addPendingImages, setAddPendingImages] = useState<
-    { file: File | Blob; preview: string }[]
-  >([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isEditDragging, setIsEditDragging] = useState(false);
-  // Pending images for edit form
-  const [editPendingImages, setEditPendingImages] = useState<
-    { file: File | Blob; preview: string }[]
-  >([]);
-  // Upload progress state
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Camera state
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -440,31 +422,18 @@ export default function DashboardPage() {
   const handleSaveEdit = async () => {
     if (!editingItem) return;
 
+    // Check if any images are still uploading (base64)
+    const hasUploadingImages = editFormData.images.some((img) =>
+      img.startsWith("data:")
+    );
+    if (hasUploadingImages) {
+      toast.warning(
+        "Images are still uploading to storage. Please wait a moment and try again."
+      );
+      return;
+    }
+
     try {
-      // Upload pending images to storage first
-      let uploadedUrls: string[] = [];
-      if (editPendingImages.length > 0) {
-        setIsUploading(true);
-        setUploadProgress(0);
-
-        try {
-          uploadedUrls = await uploadImagesToStorage(editPendingImages);
-          toast.success(
-            `${uploadedUrls.length} image(s) uploaded successfully!`
-          );
-        } catch (error) {
-          console.error("Upload error:", error);
-          toast.error("Failed to upload images. Please try again.");
-          setIsUploading(false);
-          return;
-        } finally {
-          setIsUploading(false);
-        }
-      }
-
-      // Combine already uploaded images with newly uploaded ones
-      const allImages = [...editFormData.images, ...uploadedUrls];
-
       // Calculate current value based on weight × current gold price
       const currentValue =
         editFormData.weight *
@@ -472,12 +441,12 @@ export default function DashboardPage() {
           editFormData.goldType as keyof typeof goldPricesPerGram
         ];
 
-      // Update in database
+      // Update in database (only with Supabase URLs, no base64)
       const { error: updateError } = await supabase
         .from("jewelry_items")
         .update({
           name: editFormData.name,
-          images: allImages,
+          images: editFormData.images,
           category: editFormData.category,
           gold_type: editFormData.goldType,
           weight: editFormData.weight,
@@ -499,15 +468,8 @@ export default function DashboardPage() {
         item.id === editingItem.id
           ? {
               ...item,
-              name: editFormData.name,
-              images: allImages,
-              category: editFormData.category,
-              goldType: editFormData.goldType,
-              weight: editFormData.weight,
-              buyPrice: editFormData.buyPrice,
+              ...editFormData,
               currentValue: currentValue,
-              dateBought: editFormData.dateBought,
-              description: editFormData.description,
             }
           : item
       );
@@ -516,23 +478,14 @@ export default function DashboardPage() {
       setIsEditDialogOpen(false);
       setEditingItem(null);
 
-      // Cleanup Object URLs to prevent memory leaks
-      editPendingImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
-      setEditPendingImages([]);
-      setUploadProgress(0);
-
       toast.success("Jewelry item updated successfully!");
     } catch (err) {
       console.error("Error in handleSaveEdit:", err);
       toast.error("An unexpected error occurred. Please try again.");
-      setIsUploading(false);
     }
   };
 
   const handleCancelEdit = () => {
-    // Cleanup Object URLs to prevent memory leaks
-    editPendingImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
-    setEditPendingImages([]);
     setIsEditDialogOpen(false);
     setEditingItem(null);
   };
@@ -612,57 +565,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Helper function to upload multiple images to Supabase Storage
-  const uploadImagesToStorage = async (
-    images: { file: File | Blob; preview: string }[]
-  ): Promise<string[]> => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    const uploadedUrls: string[] = [];
-
-    for (let i = 0; i < images.length; i++) {
-      const { file } = images[i];
-
-      // Create unique filename
-      const fileExt = file instanceof File ? file.name.split(".").pop() : "jpg";
-      const fileName = `${user.id}/${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(7)}.${fileExt}`;
-
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from("jewelry-images")
-        .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type || "image/jpeg",
-        });
-
-      if (error) {
-        console.error("Upload error:", error);
-        throw error;
-      }
-
-      // Get public URL
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("jewelry-images").getPublicUrl(data.path);
-
-      uploadedUrls.push(publicUrl);
-
-      // Update progress
-      setUploadProgress(Math.round(((i + 1) / images.length) * 100));
-    }
-
-    return uploadedUrls;
-  };
-
   const handleAddFormChange = (
     field: string,
     value: string | number | string[]
@@ -681,22 +583,84 @@ export default function DashboardPage() {
   };
 
   const processFiles = async (files: FileList) => {
-    const fileArray = Array.from(files).filter((f) =>
-      f.type.startsWith("image/")
-    );
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to upload images");
+        return;
+      }
 
-    if (fileArray.length === 0) {
-      return;
+      const fileArray = Array.from(files).filter((f) =>
+        f.type.startsWith("image/")
+      );
+
+      // Create base64 previews immediately for instant feedback
+      const previewPromises = fileArray.map((file) => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      });
+
+      const previews = await Promise.all(previewPromises);
+
+      // Show previews immediately
+      setAddFormData({
+        ...addFormData,
+        images: [...addFormData.images, ...previews],
+      });
+
+      // Upload to Supabase Storage in background and replace previews with URLs
+      const uploadPromises = fileArray.map(async (file, index) => {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
+
+        // Upload to Supabase Storage
+        const { data, error } = await supabase.storage
+          .from("jewelry-images")
+          .upload(fileName, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (error) {
+          console.error("Upload error:", error);
+          toast.error(`Failed to upload ${file.name}`);
+          return { preview: previews[index], url: null };
+        }
+
+        // Get public URL
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("jewelry-images").getPublicUrl(data.path);
+
+        return { preview: previews[index], url: publicUrl };
+      });
+
+      const results = await Promise.all(uploadPromises);
+
+      // Replace base64 previews with Supabase URLs
+      setAddFormData((prev) => {
+        const updatedImages = [...prev.images];
+        results.forEach(({ preview, url }) => {
+          if (url) {
+            const previewIndex = updatedImages.indexOf(preview);
+            if (previewIndex !== -1) {
+              updatedImages[previewIndex] = url;
+            }
+          }
+        });
+        return { ...prev, images: updatedImages };
+      });
+    } catch (error) {
+      console.error("Error processing files:", error);
+      toast.error("An error occurred while uploading images");
     }
-
-    // Create Object URLs for instant preview (no upload yet)
-    const newPendingImages = fileArray.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-
-    // Add to pending images state
-    setAddPendingImages((prev) => [...prev, ...newPendingImages]);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -772,25 +736,69 @@ export default function DashboardPage() {
 
     // Convert canvas to blob
     canvas.toBlob(
-      (blob) => {
+      async (blob) => {
         if (!blob) {
           toast.error("Failed to capture photo");
           return;
         }
 
-        // Create Object URL for instant preview (no upload yet)
-        const preview = URL.createObjectURL(blob);
-        const pendingImage = { file: blob, preview };
+        try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
 
-        // Add to appropriate pending images state
-        if (cameraMode === "add") {
-          setAddPendingImages((prev) => [...prev, pendingImage]);
-        } else {
-          setEditPendingImages((prev) => [...prev, pendingImage]);
+          if (!user) {
+            toast.error("You must be logged in to upload images");
+            return;
+          }
+
+          // Show loading toast
+          const loadingToast = toast.loading("Uploading photo...");
+
+          // Create unique filename
+          const fileName = `${user.id}/${Date.now()}-camera.jpg`;
+
+          // Upload to Supabase Storage
+          const { data, error } = await supabase.storage
+            .from("jewelry-images")
+            .upload(fileName, blob, {
+              cacheControl: "3600",
+              upsert: false,
+              contentType: "image/jpeg",
+            });
+
+          if (error) {
+            console.error("Upload error:", error);
+            toast.error("Failed to upload photo");
+            toast.dismiss(loadingToast);
+            return;
+          }
+
+          // Get public URL
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("jewelry-images").getPublicUrl(data.path);
+
+          // Add to appropriate form
+          if (cameraMode === "add") {
+            setAddFormData({
+              ...addFormData,
+              images: [...addFormData.images, publicUrl],
+            });
+          } else {
+            setEditFormData({
+              ...editFormData,
+              images: [...editFormData.images, publicUrl],
+            });
+          }
+
+          toast.dismiss(loadingToast);
+          toast.success("Photo captured successfully!");
+          closeCamera();
+        } catch (error) {
+          console.error("Error uploading photo:", error);
+          toast.error("An error occurred while uploading");
         }
-
-        toast.success("Photo captured successfully!");
-        closeCamera();
       },
       "image/jpeg",
       0.9
@@ -805,14 +813,6 @@ export default function DashboardPage() {
       }
     };
   }, [cameraStream]);
-
-  // Cleanup pending images on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      addPendingImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
-      editPendingImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
-    };
-  }, [addPendingImages, editPendingImages]);
 
   const handleRemoveImage = async (index: number) => {
     const imageUrl = addFormData.images[index];
@@ -857,22 +857,84 @@ export default function DashboardPage() {
   };
 
   const processEditFiles = async (files: FileList) => {
-    const fileArray = Array.from(files).filter((f) =>
-      f.type.startsWith("image/")
-    );
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to upload images");
+        return;
+      }
 
-    if (fileArray.length === 0) {
-      return;
+      const fileArray = Array.from(files).filter((f) =>
+        f.type.startsWith("image/")
+      );
+
+      // Create base64 previews immediately for instant feedback
+      const previewPromises = fileArray.map((file) => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      });
+
+      const previews = await Promise.all(previewPromises);
+
+      // Show previews immediately
+      setEditFormData({
+        ...editFormData,
+        images: [...editFormData.images, ...previews],
+      });
+
+      // Upload to Supabase Storage in background and replace previews with URLs
+      const uploadPromises = fileArray.map(async (file, index) => {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
+
+        // Upload to Supabase Storage
+        const { data, error } = await supabase.storage
+          .from("jewelry-images")
+          .upload(fileName, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (error) {
+          console.error("Upload error:", error);
+          toast.error(`Failed to upload ${file.name}`);
+          return { preview: previews[index], url: null };
+        }
+
+        // Get public URL
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("jewelry-images").getPublicUrl(data.path);
+
+        return { preview: previews[index], url: publicUrl };
+      });
+
+      const results = await Promise.all(uploadPromises);
+
+      // Replace base64 previews with Supabase URLs
+      setEditFormData((prev) => {
+        const updatedImages = [...prev.images];
+        results.forEach(({ preview, url }) => {
+          if (url) {
+            const previewIndex = updatedImages.indexOf(preview);
+            if (previewIndex !== -1) {
+              updatedImages[previewIndex] = url;
+            }
+          }
+        });
+        return { ...prev, images: updatedImages };
+      });
+    } catch (error) {
+      console.error("Error processing files:", error);
+      toast.error("An error occurred while uploading images");
     }
-
-    // Create Object URLs for instant preview (no upload yet)
-    const newPendingImages = fileArray.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-
-    // Add to pending images state
-    setEditPendingImages((prev) => [...prev, ...newPendingImages]);
   };
 
   const handleEditDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -939,6 +1001,17 @@ export default function DashboardPage() {
       return;
     }
 
+    // Check if any images are still uploading (base64)
+    const hasUploadingImages = addFormData.images.some((img) =>
+      img.startsWith("data:")
+    );
+    if (hasUploadingImages) {
+      toast.warning(
+        "Images are still uploading to storage. Please wait a moment and try again."
+      );
+      return;
+    }
+
     try {
       const {
         data: { user },
@@ -950,30 +1023,6 @@ export default function DashboardPage() {
         return;
       }
 
-      // Upload pending images to storage first
-      let uploadedUrls: string[] = [];
-      if (addPendingImages.length > 0) {
-        setIsUploading(true);
-        setUploadProgress(0);
-
-        try {
-          uploadedUrls = await uploadImagesToStorage(addPendingImages);
-          toast.success(
-            `${uploadedUrls.length} image(s) uploaded successfully!`
-          );
-        } catch (error) {
-          console.error("Upload error:", error);
-          toast.error("Failed to upload images. Please try again.");
-          setIsUploading(false);
-          return;
-        } finally {
-          setIsUploading(false);
-        }
-      }
-
-      // Combine already uploaded images with newly uploaded ones
-      const allImages = [...addFormData.images, ...uploadedUrls];
-
       // Calculate current value based on weight × current gold price
       const currentValue =
         addFormData.weight *
@@ -981,13 +1030,13 @@ export default function DashboardPage() {
           addFormData.goldType as keyof typeof goldPricesPerGram
         ];
 
-      // Insert into database
+      // Insert into database (only with Supabase URLs, no base64)
       const { data: newItem, error: insertError } = await supabase
         .from("jewelry_items")
         .insert({
           user_id: user.id,
           name: addFormData.name,
-          images: allImages,
+          images: addFormData.images.length > 0 ? addFormData.images : [],
           category: addFormData.category,
           gold_type: addFormData.goldType,
           weight: addFormData.weight,
@@ -1025,9 +1074,6 @@ export default function DashboardPage() {
 
       setIsAddDialogOpen(false);
 
-      // Cleanup Object URLs to prevent memory leaks
-      addPendingImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
-
       // Reset form
       setAddFormData({
         name: "",
@@ -1039,21 +1085,15 @@ export default function DashboardPage() {
         description: "",
         images: [],
       });
-      setAddPendingImages([]);
-      setUploadProgress(0);
 
       toast.success("Jewelry item added successfully!");
     } catch (err) {
       console.error("Error in handleAddJewelry:", err);
       toast.error("An unexpected error occurred. Please try again.");
-      setIsUploading(false);
     }
   };
 
   const handleCancelAdd = () => {
-    // Cleanup Object URLs to prevent memory leaks
-    addPendingImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
-    setAddPendingImages([]);
     setIsAddDialogOpen(false);
     // Reset form
     setAddFormData({
@@ -2066,37 +2106,30 @@ export default function DashboardPage() {
         </Tabs>
       </main>
 
-      {/* Edit Sheet */}
-      <Sheet
-        open={isEditDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) handleCancelEdit();
-          else setIsEditDialogOpen(true);
-        }}
-      >
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-2xl overflow-y-auto p-0"
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent
+          className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6"
           onInteractOutside={(e) => {
             if (isCameraOpen) e.preventDefault();
           }}
         >
           {editingItem && (
             <div
-              className={`${
+              className={`space-y-3 sm:space-y-4 ${
                 isCameraOpen ? "pointer-events-none" : ""
               }`}
             >
-              <SheetHeader>
-                <SheetTitle className="text-xl font-bold">
+              <DialogHeader>
+                <DialogTitle className="text-lg sm:text-2xl font-bold">
                   Edit Jewelry Details
-                </SheetTitle>
-                <SheetDescription className="text-sm">
+                </DialogTitle>
+                <DialogDescription className="text-xs sm:text-sm">
                   Update the information for {editingItem.name}
-                </SheetDescription>
-              </SheetHeader>
+                </DialogDescription>
+              </DialogHeader>
 
-              <div className="space-y-4 px-4 pb-4">
+              <div className="space-y-4">
                 {/* Name */}
                 <div className="space-y-2">
                   <Label htmlFor="edit-name">Name</Label>
@@ -2333,19 +2366,16 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {(editFormData.images.length > 0 ||
-                    editPendingImages.length > 0) && (
+                  {editFormData.images.length > 0 && (
                     <div className="grid grid-cols-4 gap-2 mt-2">
-                      {/* Show already uploaded images */}
                       {editFormData.images.map((img, idx) => (
-                        <div key={`uploaded-${idx}`} className="relative group">
+                        <div key={idx} className="relative group">
                           <img
                             src={img}
-                            alt={`Uploaded ${idx + 1}`}
+                            alt={`Preview ${idx + 1}`}
                             className="w-full h-20 object-cover rounded border"
                           />
                           <button
-                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               const newImages = editFormData.images.filter(
@@ -2362,38 +2392,12 @@ export default function DashboardPage() {
                           </button>
                         </div>
                       ))}
-                      {/* Show pending images (not uploaded yet) */}
-                      {editPendingImages.map((pendingImage, idx) => (
-                        <div key={`pending-${idx}`} className="relative group">
-                          <img
-                            src={pendingImage.preview}
-                            alt={`Preview ${idx + 1}`}
-                            className="w-full h-20 object-cover rounded border border-amber-500"
-                          />
-                          <div className="absolute top-1 left-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded">
-                            Preview
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              URL.revokeObjectURL(pendingImage.preview);
-                              setEditPendingImages((prev) =>
-                                prev.filter((_, i) => i !== idx)
-                              );
-                            }}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
                     </div>
                   )}
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t mt-4 px-4">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-4 sticky bottom-0 sm:static bg-background sm:bg-transparent pb-2 sm:pb-0 -mx-3 sm:mx-0 px-3 sm:px-0 border-t sm:border-t-0">
                   <Button
                     variant="outline"
                     onClick={handleCancelEdit}
@@ -2404,26 +2408,16 @@ export default function DashboardPage() {
                   <Button
                     onClick={handleSaveEdit}
                     className="bg-amber-600 hover:bg-amber-700 text-white flex-1 sm:flex-none h-12 sm:h-10 text-base sm:text-sm"
-                    disabled={isUploading}
                   >
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Uploading {uploadProgress}%
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save Changes
-                      </>
-                    )}
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
                   </Button>
                 </div>
               </div>
             </div>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Jewelry Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -2664,36 +2658,29 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Jewelry Sheet */}
-      <Sheet
-        open={isAddDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) handleCancelAdd();
-          else setIsAddDialogOpen(true);
-        }}
-      >
-        <SheetContent
-          side="right"
-          className="w-full sm:max-w-2xl overflow-y-auto p-0"
+      {/* Add Jewelry Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent
+          className="max-w-[100vw] sm:max-w-[95vw] md:max-w-2xl h-screen sm:h-auto sm:max-h-[90vh] overflow-y-auto px-3 sm:px-6 py-4 sm:py-6"
           onInteractOutside={(e) => {
             if (isCameraOpen) e.preventDefault();
           }}
         >
           <div
-            className={`${
+            className={`space-y-3 sm:space-y-4 ${
               isCameraOpen ? "pointer-events-none" : ""
             }`}
           >
-            <SheetHeader>
-              <SheetTitle className="text-xl font-bold">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-2xl font-bold">
                 Add New Jewelry
-              </SheetTitle>
-              <SheetDescription className="text-sm">
+              </DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
                 Add a new jewelry item to your collection
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
 
-            <div className="space-y-3 sm:space-y-4 px-4 pb-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="add-name">Name *</Label>
@@ -2783,31 +2770,22 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Image Count */}
-                  {(addFormData.images.length > 0 ||
-                    addPendingImages.length > 0) && (
+                  {addFormData.images.length > 0 && (
                     <div className="text-center">
                       <div className="inline-block px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium">
-                        {addFormData.images.length + addPendingImages.length}{" "}
-                        image(s) selected
-                        {addPendingImages.length > 0 &&
-                          ` (${addPendingImages.length} pending upload)`}
+                        {addFormData.images.length} image(s) uploaded
                       </div>
                     </div>
                   )}
 
                   {/* Image Previews */}
-                  {(addFormData.images.length > 0 ||
-                    addPendingImages.length > 0) && (
+                  {addFormData.images.length > 0 && (
                     <div className="grid grid-cols-3 gap-2">
-                      {/* Show already uploaded images */}
                       {addFormData.images.map((image, index) => (
-                        <div
-                          key={`uploaded-${index}`}
-                          className="relative group"
-                        >
+                        <div key={index} className="relative group">
                           <img
                             src={image}
-                            alt={`Uploaded ${index + 1}`}
+                            alt={`Upload ${index + 1}`}
                             className="w-full h-24 object-cover rounded-lg border border-border"
                           />
                           <button
@@ -2815,35 +2793,6 @@ export default function DashboardPage() {
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveImage(index);
-                            }}
-                            className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                      {/* Show pending images (not uploaded yet) */}
-                      {addPendingImages.map((pendingImage, index) => (
-                        <div
-                          key={`pending-${index}`}
-                          className="relative group"
-                        >
-                          <img
-                            src={pendingImage.preview}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg border border-amber-500"
-                          />
-                          <div className="absolute top-1 left-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded">
-                            Preview
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              URL.revokeObjectURL(pendingImage.preview);
-                              setAddPendingImages((prev) =>
-                                prev.filter((_, i) => i !== index)
-                              );
                             }}
                             className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
@@ -2998,7 +2947,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4 border-t mt-4 px-4">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4 sm:pt-4 sticky bottom-0 sm:static bg-background sm:bg-transparent pb-2 sm:pb-0 -mx-3 sm:mx-0 px-3 sm:px-0 border-t sm:border-t-0">
               <Button
                 variant="outline"
                 className="border-border w-full sm:w-auto h-12 sm:h-10 text-base sm:text-sm"
@@ -3009,24 +2958,14 @@ export default function DashboardPage() {
               <Button
                 className="flex-1 sm:flex-none h-12 sm:h-10 text-base sm:text-sm"
                 onClick={handleAddJewelry}
-                disabled={isUploading}
               >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Uploading {uploadProgress}%
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Jewelry
-                  </>
-                )}
+                <Plus className="w-4 h-4 mr-2" />
+                Add Jewelry
               </Button>
             </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

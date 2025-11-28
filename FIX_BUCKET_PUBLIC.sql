@@ -19,3 +19,4 @@ USING ( bucket_id = 'jewelry-images' );
 
 
 
+
