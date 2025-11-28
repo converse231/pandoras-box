@@ -148,6 +148,7 @@ export default function DashboardPage() {
     dateBought: "",
     description: "",
     images: [] as string[],
+    tags: [] as string[],
   });
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [addFormData, setAddFormData] = useState({
@@ -159,6 +160,7 @@ export default function DashboardPage() {
     dateBought: new Date().toISOString().split("T")[0],
     description: "",
     images: [] as string[],
+    tags: [] as string[],
   });
   // Pending images that haven't been uploaded yet (for add form)
   const [addPendingImages, setAddPendingImages] = useState<
@@ -173,6 +175,29 @@ export default function DashboardPage() {
   // Upload progress state
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  // Tag input state
+  const [addTagInput, setAddTagInput] = useState("");
+  const [editTagInput, setEditTagInput] = useState("");
+
+  // Suggested tags for quick selection
+  const suggestedTags = [
+    "White Gold",
+    "Yellow Gold",
+    "Rose Gold",
+    "Japan",
+    "Saudi",
+    "Dubai",
+    "Women",
+    "Men",
+    "Vintage",
+    "Modern",
+    "Gift",
+    "Anniversary",
+    "Wedding",
+    "Engagement",
+    "Investment",
+    "Heirloom",
+  ];
 
   // Camera state
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -285,6 +310,7 @@ export default function DashboardPage() {
           currentValue: parseFloat(item.current_value),
           dateBought: item.date_bought,
           description: item.description || "",
+          tags: item.tags || [],
         }));
 
         setJewelryItems(transformedItems);
@@ -422,6 +448,7 @@ export default function DashboardPage() {
       dateBought: item.dateBought,
       description: item.description,
       images: item.images || [],
+      tags: item.tags || [],
     });
     setIsDialogOpen(false); // Close the detail dialog
     setIsEditDialogOpen(true);
@@ -485,6 +512,7 @@ export default function DashboardPage() {
           current_value: currentValue,
           date_bought: editFormData.dateBought,
           description: editFormData.description,
+          tags: editFormData.tags,
         })
         .eq("id", editingItem.id);
 
@@ -508,6 +536,7 @@ export default function DashboardPage() {
               currentValue: currentValue,
               dateBought: editFormData.dateBought,
               description: editFormData.description,
+              tags: editFormData.tags,
             }
           : item
       );
@@ -520,6 +549,7 @@ export default function DashboardPage() {
       editPendingImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
       setEditPendingImages([]);
       setUploadProgress(0);
+      setEditTagInput("");
 
       toast.success("Jewelry item updated successfully!");
     } catch (err) {
@@ -535,6 +565,7 @@ export default function DashboardPage() {
     setEditPendingImages([]);
     setIsEditDialogOpen(false);
     setEditingItem(null);
+    setEditTagInput("");
   };
 
   // Open delete confirmation dialog
@@ -995,6 +1026,7 @@ export default function DashboardPage() {
           current_value: currentValue,
           date_bought: addFormData.dateBought,
           description: addFormData.description,
+          tags: addFormData.tags,
         })
         .select()
         .single();
@@ -1018,6 +1050,7 @@ export default function DashboardPage() {
           currentValue: parseFloat(newItem.current_value),
           dateBought: newItem.date_bought,
           description: newItem.description || "",
+          tags: newItem.tags || [],
         };
 
         setJewelryItems([transformedItem, ...jewelryItems]);
@@ -1038,9 +1071,11 @@ export default function DashboardPage() {
         dateBought: new Date().toISOString().split("T")[0],
         description: "",
         images: [],
+        tags: [],
       });
       setAddPendingImages([]);
       setUploadProgress(0);
+      setAddTagInput("");
 
       toast.success("Jewelry item added successfully!");
     } catch (err) {
@@ -1065,7 +1100,9 @@ export default function DashboardPage() {
       dateBought: new Date().toISOString().split("T")[0],
       description: "",
       images: [],
+      tags: [],
     });
+    setAddTagInput("");
   };
 
   return (
@@ -1826,6 +1863,16 @@ export default function DashboardPage() {
                         Necklaces
                       </DropdownMenuItem>
                       <DropdownMenuItem
+                        onClick={() => setCategoryFilter("Necklace w/ Pendant")}
+                      >
+                        Necklace w/ Pendants
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setCategoryFilter("Pendant")}
+                      >
+                        Pendants
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
                         onClick={() => setCategoryFilter("Bracelet")}
                       >
                         Bracelets
@@ -1834,6 +1881,16 @@ export default function DashboardPage() {
                         onClick={() => setCategoryFilter("Earrings")}
                       >
                         Earrings
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setCategoryFilter("Chain")}
+                      >
+                        Chains
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setCategoryFilter("Bangle")}
+                      >
+                        Bangles
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -2056,6 +2113,25 @@ export default function DashboardPage() {
                             Purchased on {formatDate(item.dateBought)}
                           </span>
                         </div>
+
+                        {/* Tags */}
+                        {item.tags && item.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-2">
+                            {item.tags.slice(0, 3).map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {item.tags.length > 3 && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+                                +{item.tags.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
@@ -2120,12 +2196,15 @@ export default function DashboardPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Necklace">Necklace</SelectItem>
                       <SelectItem value="Ring">Ring</SelectItem>
+                      <SelectItem value="Necklace">Necklace</SelectItem>
+                      <SelectItem value="Necklace w/ Pendant">
+                        Necklace w/ Pendant
+                      </SelectItem>
+                      <SelectItem value="Pendant">Pendant</SelectItem>
                       <SelectItem value="Bracelet">Bracelet</SelectItem>
                       <SelectItem value="Earrings">Earrings</SelectItem>
                       <SelectItem value="Chain">Chain</SelectItem>
-                      <SelectItem value="Pendant">Pendant</SelectItem>
                       <SelectItem value="Bangle">Bangle</SelectItem>
                       <SelectItem value="Others">Others</SelectItem>
                     </SelectContent>
@@ -2253,6 +2332,86 @@ export default function DashboardPage() {
                     rows={3}
                     className="w-full px-3 py-2 border rounded-md border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   />
+                </div>
+
+                {/* Tags */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tags">Tags</Label>
+                  <Input
+                    id="edit-tags"
+                    value={editTagInput}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setEditTagInput(e.target.value);
+                    }}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const trimmedTag = editTagInput.trim();
+                        if (
+                          trimmedTag &&
+                          !editFormData.tags.includes(trimmedTag)
+                        ) {
+                          handleEditFormChange("tags", [
+                            ...editFormData.tags,
+                            trimmedTag,
+                          ]);
+                          setEditTagInput("");
+                        }
+                      }
+                    }}
+                    placeholder="Type a tag and press Enter (e.g., vintage, gift)"
+                    className="border-border"
+                  />
+                  {editFormData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {editFormData.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newTags = editFormData.tags.filter(
+                                (_, i) => i !== index
+                              );
+                              handleEditFormChange("tags", newTags);
+                            }}
+                            className="hover:bg-amber-200 dark:hover:bg-amber-900/50 rounded-full p-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Suggested Tags */}
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Suggested tags:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {suggestedTags
+                        .filter((tag) => !editFormData.tags.includes(tag))
+                        .map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => {
+                              handleEditFormChange("tags", [
+                                ...editFormData.tags,
+                                tag,
+                              ]);
+                            }}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                          >
+                            + {tag}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Images Upload */}
@@ -2629,6 +2788,20 @@ export default function DashboardPage() {
                 <span>Purchased on {formatDate(selectedItem.dateBought)}</span>
               </div>
 
+              {/* Tags */}
+              {selectedItem.tags && selectedItem.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-2">
+                  {selectedItem.tags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex gap-2 pt-2">
                 <Button
@@ -2862,8 +3035,14 @@ export default function DashboardPage() {
                   >
                     <option value="Ring">Ring</option>
                     <option value="Necklace">Necklace</option>
+                    <option value="Necklace w/ Pendant">
+                      Necklace w/ Pendant
+                    </option>
+                    <option value="Pendant">Pendant</option>
                     <option value="Bracelet">Bracelet</option>
                     <option value="Earrings">Earrings</option>
+                    <option value="Chain">Chain</option>
+                    <option value="Bangle">Bangle</option>
                     <option value="Others">Others</option>
                   </select>
                 </div>
@@ -2986,6 +3165,86 @@ export default function DashboardPage() {
                   rows={3}
                   className="flex w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring resize-none"
                 />
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label htmlFor="add-tags">Tags</Label>
+                <Input
+                  id="add-tags"
+                  value={addTagInput}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setAddTagInput(e.target.value);
+                  }}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const trimmedTag = addTagInput.trim();
+                      if (
+                        trimmedTag &&
+                        !addFormData.tags.includes(trimmedTag)
+                      ) {
+                        handleAddFormChange("tags", [
+                          ...addFormData.tags,
+                          trimmedTag,
+                        ]);
+                        setAddTagInput("");
+                      }
+                    }
+                  }}
+                  placeholder="Type a tag and press Enter (e.g., vintage, gift)"
+                  className="border-border"
+                />
+                {addFormData.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {addFormData.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newTags = addFormData.tags.filter(
+                              (_, i) => i !== index
+                            );
+                            handleAddFormChange("tags", newTags);
+                          }}
+                          className="hover:bg-amber-200 dark:hover:bg-amber-900/50 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Suggested Tags */}
+                <div className="mt-2">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Suggested tags:
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {suggestedTags
+                      .filter((tag) => !addFormData.tags.includes(tag))
+                      .map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            handleAddFormChange("tags", [
+                              ...addFormData.tags,
+                              tag,
+                            ]);
+                          }}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                  </div>
+                </div>
               </div>
             </div>
 

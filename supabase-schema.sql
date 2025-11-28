@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS public.jewelry_items (
     -- Basic Information
     name TEXT NOT NULL,
     description TEXT,
-    category TEXT NOT NULL CHECK (category IN ('Ring', 'Necklace', 'Bracelet', 'Earrings', 'Chain', 'Pendant', 'Bangle', 'Others')),
+    category TEXT NOT NULL CHECK (category IN ('Ring', 'Necklace', 'Necklace w/ Pendant', 'Pendant', 'Bracelet', 'Earrings', 'Chain', 'Bangle', 'Others')),
+    tags TEXT[] DEFAULT '{}',
     
     -- Gold Information
     gold_type TEXT NOT NULL CHECK (gold_type IN ('24k', '22k', '21k', '20k', '18k', '16k', '14k', '10k')),
@@ -74,6 +75,7 @@ CREATE INDEX IF NOT EXISTS jewelry_items_user_id_idx ON public.jewelry_items(use
 CREATE INDEX IF NOT EXISTS jewelry_items_gold_type_idx ON public.jewelry_items(gold_type);
 CREATE INDEX IF NOT EXISTS jewelry_items_category_idx ON public.jewelry_items(category);
 CREATE INDEX IF NOT EXISTS jewelry_items_date_bought_idx ON public.jewelry_items(date_bought DESC);
+CREATE INDEX IF NOT EXISTS jewelry_items_tags_idx ON public.jewelry_items USING GIN(tags);
 
 -- ============================================
 -- TRIGGER FOR UPDATED_AT TIMESTAMP

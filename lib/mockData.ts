@@ -19,6 +19,7 @@ export const mockJewelryData = [
     dateBought: "2024-01-15",
     description:
       "Elegant 18k gold wedding band with classic design. Features a smooth polished finish and comfortable fit.",
+    tags: ["wedding", "classic", "elegant"],
   },
   {
     id: 2,
@@ -32,6 +33,7 @@ export const mockJewelryData = [
     dateBought: "2023-12-10",
     description:
       "Stunning 22k gold necklace adorned with brilliant cut diamonds. A timeless piece perfect for special occasions.",
+    tags: ["diamond", "luxury", "special occasion"],
   },
   {
     id: 3,
@@ -50,6 +52,7 @@ export const mockJewelryData = [
     dateBought: "2024-02-20",
     description:
       "Pure 24k gold bracelet with intricate chain design. Heavy and luxurious feel with exceptional craftsmanship.",
+    tags: ["pure gold", "luxury", "investment"],
   },
   {
     id: 4,
@@ -63,6 +66,7 @@ export const mockJewelryData = [
     dateBought: "2024-03-05",
     description:
       "Beautiful 18k gold earrings with genuine pearls. Delicate and elegant design suitable for any occasion.",
+    tags: ["pearl", "elegant", "delicate"],
   },
   {
     id: 5,
@@ -80,6 +84,7 @@ export const mockJewelryData = [
     dateBought: "2023-11-28",
     description:
       "Vintage 22k gold chain with antique finish. A collector's piece with unique character and historical appeal.",
+    tags: ["vintage", "antique", "collector"],
   },
   {
     id: 6,
@@ -93,6 +98,7 @@ export const mockJewelryData = [
     dateBought: "2024-01-30",
     description:
       "Classic 14k gold signet ring with smooth top for personalization. Timeless style with modern comfort fit.",
+    tags: ["signet", "classic", "personalizable"],
   },
   {
     id: 7,
@@ -106,6 +112,7 @@ export const mockJewelryData = [
     dateBought: "2024-02-14",
     description:
       "Beautiful 21k rose gold band with romantic pink hue. Perfect blend of durability and luxury.",
+    tags: ["rose gold", "romantic", "gift"],
   },
   {
     id: 8,
@@ -119,6 +126,7 @@ export const mockJewelryData = [
     dateBought: "2023-12-25",
     description:
       "Elegant 20k gold pendant with intricate filigree work. Features exceptional craftsmanship and detail.",
+    tags: ["pendant", "filigree", "handcrafted"],
   },
   {
     id: 9,
@@ -132,6 +140,7 @@ export const mockJewelryData = [
     dateBought: "2024-03-10",
     description:
       "Durable 16k gold chain perfect for everyday wear. Strong and stylish with comfortable weight.",
+    tags: ["everyday", "durable", "casual"],
   },
   {
     id: 10,
@@ -145,6 +154,7 @@ export const mockJewelryData = [
     dateBought: "2024-01-20",
     description:
       "Affordable 10k gold band perfect for casual wear. Great balance of gold content and durability.",
+    tags: ["affordable", "casual", "everyday"],
   },
 ];
 
