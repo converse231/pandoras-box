@@ -3886,13 +3886,21 @@ export default function DashboardPage() {
 
       {/* Image Crop Dialog */}
       {isCropDialogOpen && imageToCrop && (
-        <div className="fixed inset-0 z-100 bg-black pointer-events-auto flex flex-col">
+        <div
+          className="fixed inset-0 bg-black pointer-events-auto flex flex-col"
+          style={{ zIndex: 9999 }}
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Top Bar */}
           <div className="flex items-center justify-between p-4 bg-black/80 z-20">
             <Button
               type="button"
               variant="ghost"
-              onClick={handleCropCancel}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCropCancel();
+              }}
               className="text-white hover:bg-white/20"
             >
               <X className="w-5 h-5 mr-2" />
@@ -3903,7 +3911,11 @@ export default function DashboardPage() {
             </h3>
             <Button
               type="button"
-              onClick={handleCropSave}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCropSave();
+              }}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
               <Check className="w-5 h-5 mr-2" />
