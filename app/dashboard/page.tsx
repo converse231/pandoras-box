@@ -1227,8 +1227,15 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue="collection" className="w-full">
           <TabsList className="grid w-full max-w-xs grid-cols-2 mb-4 sm:mb-8 h-auto p-1">
+            <TabsTrigger
+              value="collection"
+              className="gap-1 sm:gap-2 text-sm sm:text-base py-2"
+            >
+              <Crown className="w-4 h-4" />
+              Collection
+            </TabsTrigger>
             <TabsTrigger
               value="overview"
               className="gap-1 sm:gap-2 text-sm sm:text-base py-2"
@@ -1236,13 +1243,6 @@ export default function DashboardPage() {
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Overview</span>
               <span className="inline sm:hidden">Stats</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="collection"
-              className="gap-1 sm:gap-2 text-sm sm:text-base py-2"
-            >
-              <Crown className="w-4 h-4" />
-              Collection
             </TabsTrigger>
           </TabsList>
 
@@ -2082,11 +2082,7 @@ export default function DashboardPage() {
           }}
         >
           {editingItem && (
-            <div
-              className={`${
-                isCameraOpen ? "pointer-events-none" : ""
-              }`}
-            >
+            <div className={`${isCameraOpen ? "pointer-events-none" : ""}`}>
               <SheetHeader className="px-6 pt-6">
                 <SheetTitle className="text-xl font-bold">
                   Edit Jewelry Details
@@ -2679,11 +2675,7 @@ export default function DashboardPage() {
             if (isCameraOpen) e.preventDefault();
           }}
         >
-          <div
-            className={`${
-              isCameraOpen ? "pointer-events-none" : ""
-            }`}
-          >
+          <div className={`${isCameraOpen ? "pointer-events-none" : ""}`}>
             <SheetHeader className="px-6 pt-6">
               <SheetTitle className="text-xl font-bold">
                 Add New Jewelry
