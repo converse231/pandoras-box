@@ -38,10 +38,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
       if (signInError) {
         setError(signInError.message);
@@ -195,7 +196,7 @@ export default function LoginPage() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <div className="relative w-full">
+            {/* <div className="relative w-full">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-amber-200/50 dark:border-amber-800/50" />
               </div>
@@ -246,7 +247,7 @@ export default function LoginPage() {
                 </svg>
                 GitHub
               </Button>
-            </div>
+            </div> */}
 
             <p className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
