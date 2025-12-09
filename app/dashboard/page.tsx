@@ -92,6 +92,7 @@ import {
   ZoomOut,
   RotateCw,
   Check,
+  AlertCircle,
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -117,6 +118,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const supabase = createClient();
   const { theme, setTheme } = useTheme();
+
+  // Item limit for public beta
+  const MAX_ITEMS = 30;
 
   // User profile state
   const [userProfile, setUserProfile] = useState<{
@@ -1177,6 +1181,14 @@ export default function DashboardPage() {
   };
 
   const handleAddJewelry = async () => {
+    // Check item limit for public beta
+    if (jewelryItems.length >= MAX_ITEMS) {
+      toast.error(
+        `You've reached the maximum limit of ${MAX_ITEMS} jewelry items. Please delete some items to add more.`
+      );
+      return;
+    }
+
     // Validate required fields
     if (!addFormData.name || !addFormData.weight || !addFormData.buyPrice) {
       toast.error(
@@ -1628,10 +1640,24 @@ export default function DashboardPage() {
 
               <Button
                 className="font-semibold h-8 md:h-9 text-xs md:text-sm px-2 md:px-4"
-                onClick={() => setIsAddDialogOpen(true)}
+                onClick={() => {
+                  if (jewelryItems.length >= MAX_ITEMS) {
+                    toast.error(
+                      `You've reached the maximum limit of ${MAX_ITEMS} jewelry items. Please delete some items to add more.`
+                    );
+                    return;
+                  }
+                  setIsAddDialogOpen(true);
+                }}
+                disabled={jewelryItems.length >= MAX_ITEMS}
               >
                 <Plus className="w-3.5 h-3.5 md:w-4 md:h-4 md:mr-2" />
-                <span className="hidden sm:inline">Add Jewelry</span>
+                <span className="hidden sm:inline">
+                  Add Jewelry ({jewelryItems.length}/{MAX_ITEMS})
+                </span>
+                <span className="sm:hidden">
+                  Add ({jewelryItems.length}/{MAX_ITEMS})
+                </span>
               </Button>
 
               {/* Export/Import Dropdown */}
@@ -2202,6 +2228,49 @@ export default function DashboardPage() {
 
           {/* Collection Tab - Just the feed */}
           <TabsContent value="collection">
+            {/* Item Limit Warning */}
+            {jewelryItems.length >= MAX_ITEMS && (
+              <Card className="mb-4 border-red-500 bg-red-50 dark:bg-red-950/20">
+                <CardContent className="py-3 px-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+                        Maximum Limit Reached
+                      </p>
+                      <p className="text-xs text-red-600 dark:text-red-500">
+                        You&apos;ve reached the limit of {MAX_ITEMS} jewelry
+                        items. Please delete some items to add more.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {jewelryItems.length >= MAX_ITEMS - 5 &&
+              jewelryItems.length < MAX_ITEMS && (
+                <Card className="mb-4 border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+                  <CardContent className="py-3 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                          Approaching Limit
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-500">
+                          You have {MAX_ITEMS - jewelryItems.length} item slots
+                          remaining out of {MAX_ITEMS}.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
             {/* Filters and Search */}
             <Card className="mb-4 sm:mb-6 border-border bg-card">
               <CardContent className="pt-4 sm:pt-6">
@@ -2497,7 +2566,16 @@ export default function DashboardPage() {
                       </p>
                       {jewelryItems.length === 0 && (
                         <Button
-                          onClick={() => setIsAddDialogOpen(true)}
+                          onClick={() => {
+                            if (jewelryItems.length >= MAX_ITEMS) {
+                              toast.error(
+                                `You've reached the maximum limit of ${MAX_ITEMS} jewelry items.`
+                              );
+                              return;
+                            }
+                            setIsAddDialogOpen(true);
+                          }}
+                          disabled={jewelryItems.length >= MAX_ITEMS}
                           className="gap-2"
                         >
                           <Plus className="w-4 h-4" />
