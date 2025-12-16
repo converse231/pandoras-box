@@ -30,6 +30,11 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import screenshot1 from "@/public/img/ss-1.png";
+import screenshot2 from "@/public/img/ss-2.png";
+import screenshot3 from "@/public/img/ss-3.png";
+import heroImage from "@/public/img/hero-pic.jpg";
+import Image from "next/image";
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -213,8 +218,8 @@ export default function Home() {
             <div className="relative lg:h-[600px] h-[400px]">
               <div className="absolute inset-0 bg-linear-to-br from-amber-200 to-yellow-200 dark:from-amber-900 dark:to-yellow-900 rounded-3xl transform rotate-3" />
               <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl">
-                <img
-                  src="/api/placeholder/800/600"
+                <Image
+                  src={heroImage}
                   alt="Luxury gold jewelry collection"
                   className="w-full h-full object-cover"
                 />
@@ -403,13 +408,12 @@ export default function Home() {
         <div className="max-w-6xl mx-auto space-y-24">
           {/* Showcase 1 */}
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl order-2 lg:order-1">
-              <img
-                src="/api/placeholder/700/500"
+            <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl order-2 lg:order-1">
+              <Image
+                src={screenshot1}
                 alt="Real-time gold price dashboard"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-linear-to-br from-amber-600/20 to-yellow-600/20" />
             </div>
             <div className="space-y-6 order-1 lg:order-2">
               <div className="inline-block px-4 py-1 rounded-full bg-amber-100 dark:bg-amber-950/30 text-sm font-semibold text-amber-900 dark:text-amber-200">
@@ -500,25 +504,23 @@ export default function Home() {
                 </li>
               </ul>
             </div>
-            <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
-              <img
-                src="/api/placeholder/700/500"
+            <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl">
+              <Image
+                src={screenshot2}
                 alt="Jewelry collection management"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-linear-to-br from-amber-600/20 to-yellow-600/20" />
             </div>
           </div>
 
           {/* Showcase 3 */}
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl order-2 lg:order-1">
-              <img
-                src="/api/placeholder/700/500"
+            <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl order-2 lg:order-1">
+              <Image
+                src={screenshot3}
                 alt="Investment analytics and charts"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-linear-to-br from-amber-600/20 to-yellow-600/20" />
             </div>
             <div className="space-y-6 order-1 lg:order-2">
               <div className="inline-block px-4 py-1 rounded-full bg-amber-100 dark:bg-amber-950/30 text-sm font-semibold text-amber-900 dark:text-amber-200">
